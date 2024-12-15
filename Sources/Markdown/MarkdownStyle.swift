@@ -5,7 +5,7 @@
 //  Created by 王楚江 on 2022/3/11.
 //
 
-import SwiftUI
+import Foundation
 
 public struct MarkdownStyle: Hashable {
     public var padding: Int?

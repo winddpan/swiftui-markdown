@@ -7,6 +7,7 @@ let package = Package(
     name: "Markdown",
     platforms: [
         .iOS(.v14),
+        .macCatalyst(.v14),
         .macOS(.v11)
     ],
     products: [
