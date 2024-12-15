@@ -32,6 +32,8 @@
 		7D6AF8E227DA73B100EE5204 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 7D6AF8E127DA73B100EE5204 /* Markdown */; };
 		7D8C8BA027DD22CA0022929A /* KaTeXGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C8B9F27DD22CA0022929A /* KaTeXGroup.swift */; };
 		7D8C8BA127DD22CA0022929A /* KaTeXGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C8B9F27DD22CA0022929A /* KaTeXGroup.swift */; };
+		E4BDA0512D0EFCB50037FA5A /* DynamicHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4BDA0502D0EFCAE0037FA5A /* DynamicHeight.swift */; };
+		E4BDA0522D0EFCB50037FA5A /* DynamicHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4BDA0502D0EFCAE0037FA5A /* DynamicHeight.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +52,7 @@
 		7D6AF8C227D9DF2300EE5204 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
 		7D6AF8D727D9E43500EE5204 /* Markdown */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Markdown; path = ..; sourceTree = "<group>"; };
 		7D8C8B9F27DD22CA0022929A /* KaTeXGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaTeXGroup.swift; sourceTree = "<group>"; };
+		E4BDA0502D0EFCAE0037FA5A /* DynamicHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHeight.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +79,7 @@
 		7D6033BE27DAEB6B00F7B36B /* Group */ = {
 			isa = PBXGroup;
 			children = (
+				E4BDA0502D0EFCAE0037FA5A /* DynamicHeight.swift */,
 				7D6033BF27DAEB7E00F7B36B /* CodeGroup.swift */,
 				7D6033C227DAF08000F7B36B /* HomeGroup.swift */,
 				7D6033C527DAF1D900F7B36B /* BaseMarkdownGroup.swift */,
@@ -251,6 +255,7 @@
 				7D025D0127DB47620057979B /* MarkdownStyleGroup.swift in Sources */,
 				7D8C8BA027DD22CA0022929A /* KaTeXGroup.swift in Sources */,
 				7D6033C627DAF1D900F7B36B /* BaseMarkdownGroup.swift in Sources */,
+				E4BDA0512D0EFCB50037FA5A /* DynamicHeight.swift in Sources */,
 				7D6033C027DAEB7E00F7B36B /* CodeGroup.swift in Sources */,
 				7D6033C327DAF08000F7B36B /* HomeGroup.swift in Sources */,
 				7D6033B927DAE5DC00F7B36B /* DemoRow.swift in Sources */,
@@ -268,6 +273,7 @@
 				7D025D0227DB47620057979B /* MarkdownStyleGroup.swift in Sources */,
 				7D8C8BA127DD22CA0022929A /* KaTeXGroup.swift in Sources */,
 				7D6033C727DAF1D900F7B36B /* BaseMarkdownGroup.swift in Sources */,
+				E4BDA0522D0EFCB50037FA5A /* DynamicHeight.swift in Sources */,
 				7D6033C127DAEB7E00F7B36B /* CodeGroup.swift in Sources */,
 				7D6033C427DAF08000F7B36B /* HomeGroup.swift in Sources */,
 				7D6033BA27DAE5DC00F7B36B /* DemoRow.swift in Sources */,

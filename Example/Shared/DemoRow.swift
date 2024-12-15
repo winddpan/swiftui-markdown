@@ -13,7 +13,8 @@ struct DemoRow<ContentView: View>: View {
     let selection: Binding<String?>
     let tag: String
     let content: () -> ContentView
-    init(title: String?, systemImage: String?, tag: String, selection: Binding<String?>, @ViewBuilder content: @escaping () -> ContentView) {
+    init(title: String?, systemImage: String?, tag: String, selection: Binding<String?>, @ViewBuilder content: @escaping () -> ContentView)
+    {
         self.content = content
         self.title = title
         self.tag = tag
@@ -21,11 +22,26 @@ struct DemoRow<ContentView: View>: View {
         self.selection = selection
     }
 
-  var body: some View {
-      NavigationLink(tag: tag, selection: selection, destination: {
-          self.content()
-      }, label: {
-          Label(title ?? "", systemImage: systemImage!)
-      })
-  }
+    var body: some View {
+        NavigationLink(
+            tag: tag, selection: selection,
+            destination: {
+                ScrollView(.vertical) {
+                    Color.red.frame(height: 100)
+                        .overlay {
+                            Text("SwiftUI Native View")
+                        }
+
+                    self.content()
+
+                    Color.red.frame(height: 100)
+                        .overlay {
+                            Text("SwiftUI Native View")
+                        }
+                }
+            },
+            label: {
+                Label(title ?? "", systemImage: systemImage!)
+            })
+    }
 }

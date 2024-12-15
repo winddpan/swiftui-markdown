@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DemoList: View {
     @Environment(\.openURL) var openURL
-    @State private var selection: String? = "Home"
+    @State private var selection: String?
     var body: some View {
         NavigationView {
             #if os(macOS)
@@ -61,6 +61,9 @@ struct DemoList: View {
             }
             DemoRow(title: "KaTeX", systemImage: "x.squareroot", tag: "KaTeX", selection: $selection) {
                 KaTeXGroup()
+            }
+            DemoRow(title: "DynamicHeight", systemImage: "house.fill", tag: "DynamicHeight", selection: $selection) {
+                DynamicHeight()
             }
             Section(header: Text("API")) {
                 DemoRow(

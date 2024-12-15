@@ -1,6 +1,6 @@
 //
 //  SwiftUIView.swift
-//  
+//
 //
 //  Created by 王楚江 on 2022/3/10.
 //
@@ -15,14 +15,13 @@ import WebKit
     public typealias CustomView = UIView
 #endif
 
-
 // JS Func
 typealias JavascriptCallback = (Result<Any?, Error>) -> Void
 private struct JavascriptFunction {
-    
+
     let functionString: String
     let callback: JavascriptCallback?
-    
+
     init(functionString: String, callback: JavascriptCallback? = nil) {
         self.functionString = functionString
         self.callback = callback
@@ -38,46 +37,50 @@ public class MarkdownWebView: CustomView, WKNavigationDelegate {
     private lazy var webview: WKWebView = {
         let preferences = WKPreferences()
         var userController = WKUserContentController()
-        userController.add(self, name: Constants.mdPreviewDidReady) // Callback from Ace editor js
+        userController.add(self, name: Constants.mdPreviewDidReady)  // Callback from Ace editor js
         userController.add(self, name: Constants.mdPreviewDidChanged)
+
+        let script = WKUserScript(source: "document.body.style.overflow = 'hidden';", injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        userController.addUserScript(script)
+
         let configuration = WKWebViewConfiguration()
         configuration.preferences = preferences
         configuration.userContentController = userController
-        let webView = WKWebView(frame: bounds, configuration: configuration)
+        let webView = NoScrollWKWebView(frame: bounds, configuration: configuration)
         webView.navigationDelegate = self
-        
+
         #if os(OSX)
-        webView.setValue(true, forKey: "drawsTransparentBackground") // Prevent white flick
+            webView.setValue(true, forKey: "drawsTransparentBackground")  // Prevent white flick
         #elseif os(iOS)
-        webView.isOpaque = false
+            webView.isOpaque = false
         #endif
-        
+
         return webView
     }()
-    
+
     var textDidChanged: ((String) -> Void)?
-    
+    var heightDidChanged: ((CGFloat) -> Void)?
+
+    private var contentSizeObserver: Any?
     private var pageLoaded = false
     private var currentContent: String = ""
     private var pendingFunctions = [JavascriptFunction]()
-    
-    
+
     override init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         initWebView()
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         initWebView()
     }
-    
+
     func setContent(_ value: String) {
-        
         guard currentContent != value else {
             return
         }
-        
+
         currentContent = value
         //
         // It's tricky to pass FULL JSON or HTML text with \n or "", ... into JS Bridge
@@ -87,16 +90,17 @@ public class MarkdownWebView: CustomView, WKNavigationDelegate {
         //
         let first = "var content = String.raw`"
         let content = """
-        \(value)
-        """.replacingOccurrences(of: "`", with: "\\`", options: .literal, range: nil)
+            \(value)
+            """.replacingOccurrences(of: "`", with: "\\`", options: .literal, range: nil)
             .replacingOccurrences(of: "{", with: "\\{", options: .literal, range: nil)
-        
+
         let end = "`; markdownPreview(content.replace(/\\\\`/g, '`').replace(/\\\\{/g, '{'));"
 
         let script = first + content + end
         callJavascript(javascriptString: script)
-        
+        updateContentHeight()
     }
+
     func setTheme(_ theme: ColorScheme) {
         if theme == .dark {
             callJavascript(javascriptString: "document.body.classList.add('theme-dark');")
@@ -122,7 +126,10 @@ public class MarkdownWebView: CustomView, WKNavigationDelegate {
         callJavascript(javascriptString: "__markdown_preview__.style.paddingRight = '\(right)px';")
     }
     ///  open links in browsers
-    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    public func webView(
+        _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
         if let url = navigationAction.request.url {
             if url.isFileURL == false {
                 openURL(url)
@@ -134,10 +141,38 @@ public class MarkdownWebView: CustomView, WKNavigationDelegate {
     }
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         /// Disable right-click menu
-        webView.evaluateJavaScript("document.body.setAttribute('oncontextmenu', 'event.preventDefault();');", completionHandler: nil);
-    }
-}
+        // webView.evaluateJavaScript("document.body.setAttribute('oncontextmenu', 'event.preventDefault();');", completionHandler: nil);
 
+        updateContentHeight()
+    }
+
+    func updateContentHeight() {
+        callJavascript(javascriptString: "document.body.scrollHeight") { [weak self] result in
+            guard let self else { return }
+            if case .success(let height) = result, let height = height as? CGFloat {
+                self.heightDidChanged?(height)
+            }
+        }
+    }
+
+    func startContentSizeKVO() {
+        #if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
+            contentSizeObserver =
+                webview.scrollView.observe(\.contentSize, options: [.old, .new]) { [weak self] _, change in
+                    if change.oldValue != change.newValue {
+                        self?.updateContentHeight()
+                    }
+                }
+        #endif
+    }
+
+#if os(macOS)
+    public override func layout() {
+        super.layout()
+        self.updateContentHeight()
+    }
+#endif
+}
 
 extension MarkdownWebView {
     private func initWebView() {
@@ -147,15 +182,19 @@ extension MarkdownWebView {
         webview.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         webview.topAnchor.constraint(equalTo: topAnchor).isActive = true
         webview.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        
+
         guard let bundlePath = Bundle.module.path(forResource: "web", ofType: "bundle"),
             let bundle = Bundle(path: bundlePath),
-            let indexPath = bundle.path(forResource: "index", ofType: "html") else {
-                fatalError("Ace editor is missing")
+            let indexPath = bundle.path(forResource: "index", ofType: "html")
+        else {
+            fatalError("Ace editor is missing")
         }
-        
+
         let data = try! Data(contentsOf: URL(fileURLWithPath: indexPath))
         webview.load(data, mimeType: "text/html", characterEncodingName: "utf-8", baseURL: bundle.resourceURL!)
+
+        startContentSizeKVO()
+
     }
     private func addFunction(function: JavascriptFunction) {
         pendingFunctions.append(function)
@@ -164,8 +203,7 @@ extension MarkdownWebView {
         webview.evaluateJavaScript(function.functionString) { (response, error) in
             if let error = error {
                 function.callback?(.failure(error))
-            }
-            else {
+            } else {
                 function.callback?(.success(response))
             }
         }
@@ -179,13 +217,11 @@ extension MarkdownWebView {
     private func callJavascript(javascriptString: String, callback: JavascriptCallback? = nil) {
         if pageLoaded {
             callJavascriptFunction(function: JavascriptFunction(functionString: javascriptString, callback: callback))
-        }
-        else {
+        } else {
             addFunction(function: JavascriptFunction(functionString: javascriptString, callback: callback))
         }
     }
 }
-
 
 // MARK: WKScriptMessageHandler
 
@@ -199,14 +235,34 @@ extension MarkdownWebView: WKScriptMessageHandler {
             callPendingFunctions()
             return
         }
-        
+
         // is Text change
         if message.name == Constants.mdPreviewDidChanged,
-           let text = message.body as? String {
-            
+            let text = message.body as? String
+        {
+
             self.textDidChanged?(text)
 
             return
         }
     }
+}
+
+class NoScrollWKWebView: WKWebView {
+    override init(frame: CGRect, configuration: WKWebViewConfiguration) {
+        super.init(frame: frame, configuration: configuration)
+        #if os(iOS)
+            scrollView.isScrollEnabled = false
+        #endif
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    #if os(macOS)
+        override func scrollWheel(with event: NSEvent) {
+            nextResponder?.scrollWheel(with: event)
+        }
+    #endif
 }
