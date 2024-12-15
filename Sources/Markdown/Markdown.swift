@@ -83,15 +83,24 @@ public struct Markdown: ViewRepresentable {
     public func updateUIView(_ webview: MarkdownWebView, context: Context) {
         updateView(webview, context: context)
     }
-    
-    @available(macOS 13.0, *)
-    @available(iOS 16.0, *)
-    public func sizeThatFits(_ proposal: ProposedViewSize, nsView: MarkdownWebView, context: Context) -> CGSize? {
-        if let width = proposal.width {
-            return CGSize(width: width, height: contentHeight)
+
+    #if os(OSX)
+        @available(macOS 13.0, *)
+        public func sizeThatFits(_ proposal: ProposedViewSize, nsView: MarkdownWebView, context: Context) -> CGSize? {
+            if let width = proposal.width {
+                return CGSize(width: width, height: contentHeight)
+            }
+            return nil
         }
-        return nil
-    }
+    #elseif os(iOS)
+        @available(iOS 16.0, *)
+        public func sizeThatFits(_ proposal: ProposedViewSize, uiView: MarkdownWebView, context: Context) -> CGSize? {
+            if let width = proposal.width {
+                return CGSize(width: width, height: contentHeight)
+            }
+            return nil
+        }
+    #endif
 }
 
 extension View {
